@@ -1,0 +1,24 @@
+DROP INDEX IF EXISTS idx_operation_logs_admin;
+DROP INDEX IF EXISTS idx_heartbeats_node;
+DROP INDEX IF EXISTS idx_subscribe_tokens_token;
+DROP INDEX IF EXISTS idx_traffic_date;
+DROP INDEX IF EXISTS idx_traffic_node;
+DROP INDEX IF EXISTS idx_traffic_instance;
+DROP INDEX IF EXISTS idx_instances_node;
+DROP INDEX IF EXISTS idx_instances_user;
+DROP INDEX IF EXISTS idx_traffic_user;
+DROP INDEX IF EXISTS idx_user_nodes_node;
+DROP INDEX IF EXISTS idx_user_nodes_user;
+DROP INDEX IF EXISTS idx_nodes_status;
+DROP INDEX IF EXISTS idx_users_status;
+
+DROP TABLE IF EXISTS operation_logs;
+DROP TABLE IF EXISTS subscribe_tokens;
+DROP TABLE IF EXISTS templates;
+DROP TABLE IF EXISTS node_heartbeats;
+DROP TABLE IF EXISTS traffic_records;
+DROP TABLE IF EXISTS snell_instances;
+DROP TABLE IF EXISTS user_nodes;
+DROP TABLE IF EXISTS nodes;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS admins;

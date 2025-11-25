@@ -1,0 +1,44 @@
+// Theme Colors
+$primary: #409eff;
+$success: #67c23a;
+$warning: #e6a23c;
+$danger: #f56c6c;
+$info: #909399;
+
+// Neutral Colors
+$text-primary: #303133;
+$text-regular: #606266;
+$text-secondary: #909399;
+$text-placeholder: #c0c4cc;
+
+$border-base: #dcdfe6;
+$border-light: #e4e7ed;
+$border-lighter: #ebeef5;
+
+$bg-base: #f5f7fa;
+$bg-light: #fafafa;
+
+// Fonts
+$font-size-base: 14px;
+$font-size-small: 12px;
+$font-size-large: 16px;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Border Radius
+$border-radius-sm: 2px;
+$border-radius-base: 4px;
+$border-radius-lg: 8px;
+
+// Shadows
+$box-shadow-base: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+$box-shadow-light: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+
+// Transitions
+$transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.15s ease;

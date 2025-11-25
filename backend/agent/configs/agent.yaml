@@ -1,0 +1,34 @@
+# Agent 配置文件示例
+agent:
+  # 节点基本信息
+  node_name: "HK-01"
+  location: "Hong Kong"
+  country_code: "HK"
+
+  # Master 服务器 API 信息
+  master_url: "https://master.example.com"
+  api_token: "your-api-token"
+
+  # 实例数据与资源限制
+  instance_dir: "/var/lib/snell"
+  port_range_start: 10000
+  port_range_end: 20000
+
+  # Snell 二进制路径
+  snell_binary: "/usr/local/bin/snell-server"
+
+  # 定时任务间隔（秒）
+  heartbeat_interval: 30
+  config_sync_interval: 60
+  traffic_report_interval: 300
+
+  # 日志设置
+  log_level: "info"    # 可选: debug, info, warn, error
+  log_format: "json"   # 可选: json, text
+  log_file: "/var/log/snell-agent.log"
+
+# 监控开关
+monitor:
+  enable_cpu: true
+  enable_memory: true
+  enable_traffic: true

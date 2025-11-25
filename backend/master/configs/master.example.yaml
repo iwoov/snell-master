@@ -1,0 +1,22 @@
+# Master service configuration
+server:
+  host: 0.0.0.0
+  port: 8080
+  mode: debug
+
+database:
+  path: data/snell-master.db
+
+jwt:
+  secret: change-me
+  expire_hours: 24
+
+log:
+  level: info
+  format: text
+  ignore_paths:
+    - /healthz
+
+cors:
+  allow_origins:
+    - "*"
