@@ -15,17 +15,18 @@ import (
 	"github.com/iwoov/snell-master/pkg/utils"
 )
 
-// UserService 处理用户相关业务。
+// UserService 处理用户业务逻辑。
 type UserService struct {
 	repo          repository.UserRepository
+	adminRepo     repository.AdminRepository
 	logger        *logrus.Logger
 	jwtSecret     string
 	jwtExpireHour int
 }
 
 // NewUserService 返回实例。
-func NewUserService(repo repository.UserRepository, logger *logrus.Logger, jwtSecret string, jwtExpireHour int) *UserService {
-	return &UserService{repo: repo, logger: logger, jwtSecret: jwtSecret, jwtExpireHour: jwtExpireHour}
+func NewUserService(repo repository.UserRepository, adminRepo repository.AdminRepository, logger *logrus.Logger, jwtSecret string, jwtExpireHour int) *UserService {
+	return &UserService{repo: repo, adminRepo: adminRepo, logger: logger, jwtSecret: jwtSecret, jwtExpireHour: jwtExpireHour}
 }
 
 // CreateUser 新建用户并返回结果。
@@ -176,6 +177,11 @@ func (s *UserService) UpdateUserStatus(id uint, status int) error {
 // GetUserNodes 返回关联节点。
 func (s *UserService) GetUserNodes(userID uint) ([]model.Node, error) {
 	return s.repo.GetUserNodes(userID)
+}
+
+// GetAllAdmins 返回所有管理员（用于实例创建时的用户选择）。
+func (s *UserService) GetAllAdmins() ([]model.Admin, error) {
+	return s.adminRepo.GetAll()
 }
 
 func getInt64(value interface{}) (int64, bool) {

@@ -34,7 +34,7 @@ type ServiceDeps struct {
 func NewServices(deps ServiceDeps) *Services {
 	repos := deps.Repositories
 	adminSvc := NewAdminService(repos.Admin, deps.Logger, deps.Config.JWT.Secret, deps.Config.JWT.ExpireHours)
-	userSvc := NewUserService(repos.User, deps.Logger, deps.Config.JWT.Secret, deps.Config.JWT.ExpireHours)
+	userSvc := NewUserService(repos.User, repos.Admin, deps.Logger, deps.Config.JWT.Secret, deps.Config.JWT.ExpireHours)
 	nodeSvc := NewNodeService(repos.Node, repos.Instance, deps.Logger)
 	instanceSvc := NewInstanceService(repos.Instance, repos.User, repos.Node, deps.Logger)
 	trafficSvc := NewTrafficService(repos.Traffic, repos.User, deps.Logger)

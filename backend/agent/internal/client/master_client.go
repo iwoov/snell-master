@@ -144,7 +144,7 @@ func (c *MasterClient) addAuthHeader(req *http.Request) {
 	if req == nil || c.apiToken == "" {
 		return
 	}
-	req.Header.Set("Authorization", "Bearer "+c.apiToken)
+	req.Header.Set("X-API-Token", c.apiToken)
 }
 
 func (c *MasterClient) handleResponse(resp *http.Response) ([]byte, error) {

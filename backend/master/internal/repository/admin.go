@@ -14,6 +14,7 @@ type AdminRepository interface {
 	Delete(id uint) error
 	List(offset, limit int) ([]model.Admin, int64, error)
 	CountByRole(role int) (int64, error)
+	GetAll() ([]model.Admin, error)
 }
 
 type adminRepository struct {
@@ -73,4 +74,12 @@ func (r *adminRepository) CountByRole(role int) (int64, error) {
 		return 0, err
 	}
 	return total, nil
+}
+
+func (r *adminRepository) GetAll() ([]model.Admin, error) {
+	var admins []model.Admin
+	if err := r.db.Find(&admins).Error; err != nil {
+		return nil, err
+	}
+	return admins, nil
 }

@@ -113,6 +113,8 @@ cat > $CONFIG_DIR/agent.yaml << EOF
 # Snell Master Agent 配置文件
 agent:
   node_name: "${NODE_NAME}"
+  location: "Unknown"
+  country_code: "UN"
   master_url: "${MASTER_URL}"
   api_token: "${API_TOKEN}"
 
@@ -175,7 +177,7 @@ After=network.target nftables.service
 Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR
-ExecStart=$INSTALL_DIR/snell-agent -c $CONFIG_DIR/agent.yaml
+ExecStart=$INSTALL_DIR/snell-agent -config $CONFIG_DIR/agent.yaml
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

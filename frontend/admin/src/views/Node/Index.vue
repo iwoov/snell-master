@@ -30,11 +30,11 @@
             <div class="usage-info">
               <div class="usage-item">
                 <span>CPU</span>
-                <el-progress :percentage="Math.round(row.cpu_usage)" :stroke-width="6" />
+                <el-progress :percentage="Math.round(row.cpu_usage)" :stroke-width="6" :color="getUsageColor(row.cpu_usage)" />
               </div>
               <div class="usage-item">
                 <span>Mem</span>
-                <el-progress :percentage="Math.round(row.memory_usage)" :stroke-width="6" status="warning" />
+                <el-progress :percentage="Math.round(row.memory_usage)" :stroke-width="6" :color="getUsageColor(row.memory_usage)" />
               </div>
             </div>
           </template>
@@ -45,12 +45,30 @@
             {{ row.last_seen_at ? formatDate(row.last_seen_at) : '-' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="320" fixed="right">
+        <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="success" @click="handleDownloadScript(row)">下载安装脚本</el-button>
-            <el-button link type="warning" @click="handleRegenerateToken(row)">重置Token</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <div class="action-buttons">
+              <el-tooltip content="编辑节点" placement="top">
+                <el-button link type="primary" @click="handleEdit(row)">
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="下载安装脚本" placement="top">
+                <el-button link type="success" @click="handleDownloadScript(row)">
+                  <el-icon><Download /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="重置 API Token" placement="top">
+                <el-button link type="warning" @click="handleRegenerateToken(row)">
+                  <el-icon><RefreshLeft /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="删除节点" placement="top">
+                <el-button link type="danger" @click="handleDelete(row)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -118,7 +136,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Plus, CopyDocument } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import dayjs from 'dayjs'
@@ -131,6 +148,7 @@ import {
   regenerateToken,
   downloadInstallScript
 } from '@/api/node'
+import { Edit, Download, RefreshLeft, Delete, Plus, CopyDocument } from '@element-plus/icons-vue'
 import type { Node } from '@/api/node'
 
 // State
@@ -282,6 +300,17 @@ const handleRegenerateToken = (row: Node) => {
   })
 }
 
+// 根据使用率返回颜色：绿色(0-60%)、黄色(60-80%)、红色(80-100%)
+const getUsageColor = (percentage: number) => {
+  if (percentage < 60) {
+    return '#67c23a' // 绿色
+  } else if (percentage < 80) {
+    return '#e6a23c' // 黄色
+  } else {
+    return '#f56c6c' // 红色
+  }
+}
+
 const handleDownloadScript = async (row: Node) => {
   try {
     await downloadInstallScript(row.id, row.name)
@@ -354,5 +383,16 @@ onMounted(() => {
 .token-content p {
   margin-bottom: 16px;
   color: #606266;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  
+  :deep(.el-button) {
+    padding: 5px;
+    font-size: 16px;
+  }
 }
 </style>

@@ -30,49 +30,38 @@
         <template #title>仪表盘</template>
       </el-menu-item>
 
-      <el-sub-menu index="users">
-        <template #title>
-          <el-icon><User /></el-icon>
-          <span>用户管理</span>
-        </template>
-        <el-menu-item index="/users">用户列表</el-menu-item>
-      </el-sub-menu>
+      <el-menu-item index="/users">
+        <el-icon><User /></el-icon>
+        <template #title>用户管理</template>
+      </el-menu-item>
 
-      <el-sub-menu index="nodes">
-        <template #title>
-          <el-icon><Monitor /></el-icon>
-          <span>节点管理</span>
-        </template>
-        <el-menu-item index="/nodes">节点列表</el-menu-item>
-      </el-sub-menu>
+      <el-menu-item index="/nodes">
+        <el-icon><Monitor /></el-icon>
+        <template #title>节点管理</template>
+      </el-menu-item>
 
-      <el-sub-menu index="instances">
-        <template #title>
-          <el-icon><Connection /></el-icon>
-          <span>实例管理</span>
-        </template>
-        <el-menu-item index="/instances">实例列表</el-menu-item>
-      </el-sub-menu>
+      <el-menu-item index="/instances">
+        <el-icon><Connection /></el-icon>
+        <template #title>实例管理</template>
+      </el-menu-item>
 
-      <el-sub-menu index="traffic">
-        <template #title>
-          <el-icon><TrendCharts /></el-icon>
-          <span>流量统计</span>
-        </template>
-        <el-menu-item index="/traffic">流量概览</el-menu-item>
-      </el-sub-menu>
+      <el-menu-item index="/traffic">
+        <el-icon><TrendCharts /></el-icon>
+        <template #title>流量统计</template>
+      </el-menu-item>
 
-      <el-sub-menu index="subscription">
-        <template #title>
-          <el-icon><Link /></el-icon>
-          <span>订阅管理</span>
-        </template>
-        <el-menu-item index="/subscriptions">订阅列表</el-menu-item>
-        <el-menu-item index="/templates">模板管理</el-menu-item>
-      </el-sub-menu>
+      <el-menu-item index="/subscriptions">
+        <el-icon><Link /></el-icon>
+        <template #title>订阅管理</template>
+      </el-menu-item>
+
+      <el-menu-item index="/templates">
+        <el-icon><Document /></el-icon>
+        <template #title>模板管理</template>
+      </el-menu-item>
 
       <el-menu-item index="/logs">
-        <el-icon><Document /></el-icon>
+        <el-icon><Notebook /></el-icon>
         <template #title>操作日志</template>
       </el-menu-item>
 
@@ -95,6 +84,7 @@ import {
   TrendCharts,
   Link,
   Document,
+  Notebook,
   Setting
 } from '@element-plus/icons-vue'
 
