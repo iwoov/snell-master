@@ -49,19 +49,36 @@ func (s *TrafficScheduler) Start(intervalSeconds int) error {
 }
 
 func (s *TrafficScheduler) run() {
-	ticker := time.NewTicker(s.interval)
+	reportTicker := time.NewTicker(s.interval)
+	syncTicker := time.NewTicker(30 * time.Second)
 	defer func() {
-		ticker.Stop()
+		reportTicker.Stop()
+		syncTicker.Stop()
 		close(s.stopped)
 	}()
 
+	// Initial sync
+	s.syncRules()
+
 	for {
 		select {
-		case <-ticker.C:
+		case <-reportTicker.C:
 			s.reportTraffic()
+		case <-syncTicker.C:
+			s.syncRules()
 		case <-s.stopCh:
 			return
 		}
+	}
+}
+
+func (s *TrafficScheduler) syncRules() {
+	instances := s.instanceMgr.GetAllInstances()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := s.trafficMonitor.SyncRules(ctx, instances); err != nil {
+		logger.WithModule("scheduler").Warnf("Sync traffic rules failed: %v", err)
 	}
 }
 

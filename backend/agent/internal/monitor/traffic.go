@@ -110,7 +110,7 @@ func (m *TrafficMonitor) AddInstanceRules(ctx context.Context, inst *manager.Ins
 		defer cancel()
 	}
 	port := strconv.Itoa(inst.Port)
-	comment := inst.Username
+	comment := fmt.Sprintf("inst-%d", inst.ID)
 
 	for _, proto := range []string{"tcp", "udp"} {
 		if _, err := m.runner.Run(ctx, nftBinary, "add", "rule", m.family, m.table, m.chain,
@@ -126,13 +126,17 @@ func (m *TrafficMonitor) RemoveInstanceRules(ctx context.Context, inst *manager.
 	if inst == nil {
 		return fmt.Errorf("instance is nil")
 	}
+	return m.removeRulesByComment(ctx, fmt.Sprintf("inst-%d", inst.ID))
+}
+
+func (m *TrafficMonitor) removeRulesByComment(ctx context.Context, comment string) error {
 	rules, err := m.listRules(ctx)
 	if err != nil {
 		return err
 	}
 	var errs []string
 	for _, rule := range rules {
-		if rule.Comment == inst.Username {
+		if rule.Comment == comment {
 			handle := strconv.FormatInt(rule.Handle, 10)
 			if _, err := m.runner.Run(ctx, nftBinary, "delete", "rule", m.family, m.table, m.chain, "handle", handle); err != nil {
 				errs = append(errs, err.Error())
@@ -141,6 +145,50 @@ func (m *TrafficMonitor) RemoveInstanceRules(ctx context.Context, inst *manager.
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("delete rule: %s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+// SyncRules 同步实例规则，确保所有实例都有规则，且删除多余规则。
+func (m *TrafficMonitor) SyncRules(ctx context.Context, instances []*manager.Instance) error {
+	rules, err := m.listRules(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Map comment -> true
+	existingComments := make(map[string]bool)
+	for _, rule := range rules {
+		existingComments[rule.Comment] = true
+	}
+
+	// Ensure all instances have rules
+	activeComments := make(map[string]bool)
+	for _, inst := range instances {
+		if inst.Status != manager.InstanceStatusRunning {
+			continue
+		}
+		comment := fmt.Sprintf("inst-%d", inst.ID)
+		activeComments[comment] = true
+		if !existingComments[comment] {
+			if err := m.AddInstanceRules(ctx, inst); err != nil {
+				logger.WithModule("monitor").Errorf("Add rules for instance %d failed: %v", inst.ID, err)
+			} else {
+				logger.WithModule("monitor").Infof("Added traffic rules for instance %d", inst.ID)
+			}
+		}
+	}
+
+	// Remove orphan rules
+	for _, rule := range rules {
+		if strings.HasPrefix(rule.Comment, "inst-") && !activeComments[rule.Comment] {
+			handle := strconv.FormatInt(rule.Handle, 10)
+			if _, err := m.runner.Run(ctx, nftBinary, "delete", "rule", m.family, m.table, m.chain, "handle", handle); err != nil {
+				logger.WithModule("monitor").Errorf("Delete orphan rule handle %s failed: %v", handle, err)
+			} else {
+				logger.WithModule("monitor").Infof("Deleted orphan traffic rule (comment: %s)", rule.Comment)
+			}
+		}
 	}
 	return nil
 }

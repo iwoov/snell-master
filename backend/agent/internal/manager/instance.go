@@ -27,8 +27,6 @@ type Instance struct {
 	Version  int
 	OBFS     string
 
-	PID        int
-	PIDFile    string
 	ConfigFile string
 	LogFile    string
 	Status     int
@@ -49,12 +47,41 @@ type InstanceManager struct {
 // NewInstanceManager 创建实例管理器并确保必要目录存在。
 func NewInstanceManager(instanceDir, snellBinary string, portStart, portEnd int) *InstanceManager {
 	_ = os.MkdirAll(instanceDir, 0o755)
-	return &InstanceManager{
+	m := &InstanceManager{
 		instances:      make(map[uint]*Instance),
 		instanceDir:    instanceDir,
 		snellBinary:    snellBinary,
 		portRangeStart: portStart,
 		portRangeEnd:   portEnd,
+	}
+	m.RestoreInstances()
+	return m
+}
+
+// RestoreInstances 扫描本地配置文件并恢复实例状态。
+func (m *InstanceManager) RestoreInstances() {
+	files, err := os.ReadDir(m.instanceDir)
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		var id uint
+		if _, err := fmt.Sscanf(file.Name(), "instance_%d.conf", &id); err == nil {
+			inst := &Instance{
+				ID: id,
+			}
+			inst.ConfigFile, inst.LogFile = m.generateFilePaths(id)
+
+			if m.isServiceActive(id) {
+				inst.Status = InstanceStatusRunning
+			} else {
+				inst.Status = InstanceStatusStopped
+			}
+			m.setInstance(inst)
+		}
 	}
 }
 
@@ -91,11 +118,10 @@ func (m *InstanceManager) deleteInstance(id uint) {
 	delete(m.instances, id)
 }
 
-// generateFilePaths 根据实例 ID 生成配置、日志、PID 文件路径。
-func (m *InstanceManager) generateFilePaths(id uint) (configPath, logPath, pidPath string) {
+// generateFilePaths 根据实例 ID 生成配置、日志文件路径。
+func (m *InstanceManager) generateFilePaths(id uint) (configPath, logPath string) {
 	configPath = filepath.Join(m.instanceDir, fmt.Sprintf("instance_%d.conf", id))
 	logPath = filepath.Join(m.instanceDir, fmt.Sprintf("instance_%d.log", id))
-	pidPath = filepath.Join(m.instanceDir, fmt.Sprintf("instance_%d.pid", id))
 	return
 }
 

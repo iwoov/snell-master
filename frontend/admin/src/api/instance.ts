@@ -7,8 +7,13 @@ export interface Instance {
     node_id: number
     port: number
     psk: string
-    status: number // 1: running, 0: stopped
+    version: number
+    obfs: string
+    config_path: string
+    service_name: string
+    status: string  // 'running' | 'stopped'
     created_at: string
+    updated_at: string
     user?: {
         id: number
         username: string
@@ -85,10 +90,10 @@ export function restartInstance(id: number) {
 }
 
 // Update Instance Status
-export function updateInstanceStatus(id: number, status: number) {
+export function updateInstanceStatus(id: number, status: string) {
     return request({
         url: `/admin/instances/${id}/status`,
-        method: 'post',
+        method: 'put',
         data: { status }
     })
 }

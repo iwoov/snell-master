@@ -10,7 +10,7 @@ agent:
   api_token: "your-api-token"
 
   # 实例数据与资源限制
-  instance_dir: "/var/lib/snell"
+  instance_dir: "/var/lib/snell-master/instances"
   port_range_start: 10000
   port_range_end: 20000
 
@@ -25,7 +25,7 @@ agent:
   # 日志设置
   log_level: "info"    # 可选: debug, info, warn, error
   log_format: "json"   # 可选: json, text
-  log_file: "/var/log/snell-agent.log"
+  log_file: "/var/log/snell-master/agent.log"
 
 # 监控开关
 monitor:

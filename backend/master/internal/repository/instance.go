@@ -80,7 +80,7 @@ func (r *instanceRepository) UpdateStatus(id uint, status string) error {
 
 func (r *instanceRepository) GetByNode(nodeID uint) ([]model.SnellInstance, error) {
 	var instances []model.SnellInstance
-	if err := r.db.Where("node_id = ?", nodeID).Find(&instances).Error; err != nil {
+	if err := r.db.Preload("User").Preload("Node").Where("node_id = ?", nodeID).Find(&instances).Error; err != nil {
 		return nil, err
 	}
 	return instances, nil

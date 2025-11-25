@@ -13,7 +13,7 @@ func TestSystemMonitorUpdate(t *testing.T) {
 		WithDiskProvider(func(context.Context) (float64, error) { return 56.1, nil }),
 	)
 
-	if err := mon.Update(nil); err != nil {
+	if err := mon.Update(context.Background()); err != nil {
 		t.Fatalf("Update() error = %v", err)
 	}
 

@@ -21,7 +21,7 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{svc: svc}
 }
 
-// List 用户列表（包括管理员）。
+// List 用户列表。
 func (h *UserHandler) List(c *gin.Context) {
 	page, pageSize := parsePagination(c)
 	filter := repository.UserFilter{Keyword: c.Query("keyword")}
@@ -35,35 +35,7 @@ func (h *UserHandler) List(c *gin.Context) {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	// 如果是第一页，同时获取管理员列表
-	var allUsers []interface{}
-	totalCount := total
-
-	if page == 1 {
-		// 获取所有管理员
-		admins, err := h.svc.GetAllAdmins()
-		if err == nil && len(admins) > 0 {
-			// 将管理员转换为用户格式并添加到列表开头
-			for _, admin := range admins {
-				adminAsUser := map[string]interface{}{
-					"id":       admin.ID,
-					"username": admin.Username + " (管理员)",
-					"email":    "",
-					"status":   1,
-				}
-				allUsers = append(allUsers, adminAsUser)
-			}
-			totalCount += int64(len(admins))
-		}
-	}
-
-	// 添加普通用户
-	for _, user := range users {
-		allUsers = append(allUsers, user)
-	}
-
-	common.Success(c, gin.H{"items": allUsers, "total": totalCount, "page": page, "page_size": pageSize})
+	common.Success(c, gin.H{"items": users, "total": total, "page": page, "page_size": pageSize})
 }
 
 // Create 创建用户。

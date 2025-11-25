@@ -12,22 +12,45 @@ import (
 
 // InstanceService 管理 Snell 实例。
 type InstanceService struct {
-	repo     repository.InstanceRepository
-	userRepo repository.UserRepository
-	nodeRepo repository.NodeRepository
-	logger   *logrus.Logger
+	repo      repository.InstanceRepository
+	userRepo  repository.UserRepository
+	nodeRepo  repository.NodeRepository
+	adminRepo repository.AdminRepository
+	logger    *logrus.Logger
 }
 
 // NewInstanceService 构造函数。
-func NewInstanceService(repo repository.InstanceRepository, userRepo repository.UserRepository, nodeRepo repository.NodeRepository, logger *logrus.Logger) *InstanceService {
-	return &InstanceService{repo: repo, userRepo: userRepo, nodeRepo: nodeRepo, logger: logger}
+func NewInstanceService(repo repository.InstanceRepository, userRepo repository.UserRepository, nodeRepo repository.NodeRepository, adminRepo repository.AdminRepository, logger *logrus.Logger) *InstanceService {
+	return &InstanceService{repo: repo, userRepo: userRepo, nodeRepo: nodeRepo, adminRepo: adminRepo, logger: logger}
 }
 
 // CreateInstance 创建实例并分配端口。
 func (s *InstanceService) CreateInstance(userID, nodeID uint, version int, obfs string) (*model.SnellInstance, error) {
-	if _, err := s.userRepo.GetByID(userID); err != nil {
-		return nil, err
+	// 检查用户是否存在，如果不存在可能是管理员
+	_, userErr := s.userRepo.GetByID(userID)
+	if userErr != nil {
+		// 尝试查找管理员
+		admin, adminErr := s.adminRepo.GetByID(userID)
+		if adminErr != nil {
+			return nil, fmt.Errorf("user not found: %w", userErr)
+		}
+
+		// 找到管理员，为其创建对应的 user 记录
+		user := &model.User{
+			ID:           admin.ID,
+			Username:     admin.Username,
+			PasswordHash: admin.PasswordHash,
+			Email:        "",
+			TrafficLimit: 1099511627776, // 默认 1TB
+			Status:       1,
+		}
+		if err := s.userRepo.Create(user); err != nil {
+			return nil, fmt.Errorf("create user from admin: %w", err)
+		}
+		s.logger.Infof("Auto-created user record for admin: %s (ID: %d)", admin.Username, admin.ID)
 	}
+
+	// 检查节点
 	if _, err := s.nodeRepo.GetByID(nodeID); err != nil {
 		return nil, err
 	}

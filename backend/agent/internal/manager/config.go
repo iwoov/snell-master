@@ -12,7 +12,7 @@ func (m *InstanceManager) generateConfig(instance *Instance) (string, error) {
 	if instance == nil {
 		return "", fmt.Errorf("instance is nil")
 	}
-	path, _, _ := m.generateFilePaths(instance.ID)
+	path, _ := m.generateFilePaths(instance.ID)
 	var builder strings.Builder
 	builder.WriteString("[snell-server]\n")
 	builder.WriteString(fmt.Sprintf("listen = 0.0.0.0:%d\n", instance.Port))

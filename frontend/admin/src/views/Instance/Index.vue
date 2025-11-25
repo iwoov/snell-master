@@ -84,8 +84,8 @@
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">
-              {{ row.status === 1 ? '运行中' : '已停止' }}
+            <el-tag :type="row.status === 'running' ? 'success' : 'info'">
+              {{ row.status === 'running' ? '运行中' : '已停止' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -99,10 +99,10 @@
             <el-button link type="primary" @click="handleViewConfig(row)">配置</el-button>
             <el-button 
               link 
-              :type="row.status === 1 ? 'warning' : 'success'" 
+              :type="row.status === 'running' ? 'warning' : 'success'" 
               @click="handleToggleStatus(row)"
             >
-              {{ row.status === 1 ? '停止' : '启动' }}
+              {{ row.status === 'running' ? '停止' : '启动' }}
             </el-button>
             <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
@@ -407,8 +407,8 @@ const handleDelete = (row: Instance) => {
 }
 
 const handleToggleStatus = (row: Instance) => {
-  const action = row.status === 1 ? '停止' : '启动'
-  const newStatus = row.status === 1 ? 0 : 1
+  const action = row.status === 'running' ? '停止' : '启动'
+  const newStatus = row.status === 'running' ? 'stopped' : 'running'
   
   ElMessageBox.confirm(
     `确定要${action}该实例吗？`,

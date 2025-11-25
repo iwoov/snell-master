@@ -1,20 +1,15 @@
 package manager
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
-	"syscall"
-	"time"
 
 	"github.com/iwoov/snell-master/backend/pkg/logger"
 	"github.com/iwoov/snell-master/backend/pkg/utils"
 )
 
-// StartInstance 启动 Snell 实例。
+// StartInstance 启动 Snell 实例（Systemd 模式）。
 func (m *InstanceManager) StartInstance(instance *Instance) error {
 	if instance == nil {
 		return fmt.Errorf("instance is nil")
@@ -22,14 +17,16 @@ func (m *InstanceManager) StartInstance(instance *Instance) error {
 	if instance.Port <= 0 {
 		return fmt.Errorf("instance port must be greater than zero")
 	}
-	if m.IsPortUsedByOther(instance.ID, instance.Port) {
-		return fmt.Errorf("port %d already used by another instance", instance.Port)
-	}
+	// Systemd 模式下，端口检查可能需要依赖 systemd 启动失败来反馈，或者保留预检查
 	if !utils.IsPortAvailable(instance.Port) {
-		return fmt.Errorf("port %d is not available", instance.Port)
+		// 注意：如果是重启，端口可能被旧进程占用，但 Systemd 会处理重启
+		// 这里我们只在非运行状态下检查端口
+		if !m.isServiceActive(instance.ID) {
+			return fmt.Errorf("port %d is not available", instance.Port)
+		}
 	}
 
-	configPath, logPath, pidPath := m.generateFilePaths(instance.ID)
+	configPath, logPath := m.generateFilePaths(instance.ID)
 	if _, err := m.generateConfig(instance); err != nil {
 		return err
 	}
@@ -38,93 +35,52 @@ func (m *InstanceManager) StartInstance(instance *Instance) error {
 		return fmt.Errorf("create log dir: %w", err)
 	}
 
-	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if err != nil {
-		return fmt.Errorf("open log file: %w", err)
-	}
-	defer logFile.Close()
-
-	cmd := exec.Command(m.snellBinary, "-c", configPath)
-	cmd.Stdout = logFile
-	cmd.Stderr = logFile
-	if runtime.GOOS != "windows" {
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// 生成 Systemd Service 文件
+	if _, err := m.generateServiceFile(instance); err != nil {
+		return fmt.Errorf("generate service file: %w", err)
 	}
 
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("start snell process: %w", err)
+	// 启动服务
+	if err := m.enableAndStartService(instance.ID); err != nil {
+		return fmt.Errorf("start service: %w", err)
 	}
 
-	instance.PID = cmd.Process.Pid
-	instance.PIDFile = pidPath
+	instance.ConfigFile = configPath
 	instance.LogFile = logPath
-	if err := utils.WritePIDFile(pidPath, instance.PID); err != nil {
-		return err
-	}
-
 	instance.Status = InstanceStatusRunning
-	logger.WithModule("manager").Infof("Instance %d started (PID=%d, Port=%d)", instance.ID, instance.PID, instance.Port)
+
+	logger.WithModule("manager").Infof("Instance %d started via Systemd (Port=%d)", instance.ID, instance.Port)
 	return nil
 }
 
-// StopInstance 停止 Snell 实例。
+// StopInstance 停止 Snell 实例（Systemd 模式）。
 func (m *InstanceManager) StopInstance(instance *Instance) error {
 	if instance == nil {
 		return fmt.Errorf("instance is nil")
 	}
-	if instance.PID == 0 {
-		return fmt.Errorf("instance %d is not running", instance.ID)
+
+	if err := m.stopAndDisableService(instance.ID); err != nil {
+		return fmt.Errorf("stop service: %w", err)
 	}
 
-	proc, err := os.FindProcess(instance.PID)
-	if err != nil {
-		return fmt.Errorf("find process: %w", err)
-	}
-
-	if runtime.GOOS == "windows" {
-		_ = proc.Kill()
-	} else {
-		if err := proc.Signal(syscall.SIGTERM); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			return fmt.Errorf("terminate process: %w", err)
-		}
-	}
-
-	waitUntil := time.After(2 * time.Second)
-	ticker := time.NewTicker(200 * time.Millisecond)
-	defer ticker.Stop()
-
-	stopped := false
-	for !stopped {
-		select {
-		case <-waitUntil:
-			stopped = true
-		case <-ticker.C:
-			if !utils.IsProcessRunning(instance.PID) {
-				stopped = true
-			}
-		}
-	}
-
-	if utils.IsProcessRunning(instance.PID) {
-		if err := proc.Kill(); err != nil && !errors.Is(err, os.ErrProcessDone) {
-			return fmt.Errorf("force kill process: %w", err)
-		}
-	}
-
-	_ = utils.RemovePIDFile(instance.PIDFile)
-	instance.PID = 0
 	instance.Status = InstanceStatusStopped
-	logger.WithModule("manager").Infof("Instance %d stopped", instance.ID)
+	logger.WithModule("manager").Infof("Instance %d stopped via Systemd", instance.ID)
 	return nil
 }
 
 // RestartInstance 重启实例。
 func (m *InstanceManager) RestartInstance(instance *Instance) error {
-	if err := m.StopInstance(instance); err != nil {
-		logger.WithModule("manager").Warnf("Stop before restart failed: %v", err)
+	// Ensure config and service files are up to date and service is enabled
+	if err := m.StartInstance(instance); err != nil {
+		return err
 	}
-	time.Sleep(time.Second)
-	return m.StartInstance(instance)
+
+	// Force restart to apply changes
+	serviceName := fmt.Sprintf("snell-instance-%d.service", instance.ID)
+	if err := m.systemctl("restart", serviceName); err != nil {
+		return fmt.Errorf("restart service: %w", err)
+	}
+	return nil
 }
 
 // CheckInstanceStatus 返回实例运行状态。
@@ -132,10 +88,7 @@ func (m *InstanceManager) CheckInstanceStatus(instance *Instance) int {
 	if instance == nil {
 		return InstanceStatusStopped
 	}
-	if instance.PID == 0 {
-		return InstanceStatusStopped
-	}
-	if utils.IsProcessRunning(instance.PID) {
+	if m.isServiceActive(instance.ID) {
 		return InstanceStatusRunning
 	}
 	return InstanceStatusStopped

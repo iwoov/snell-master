@@ -23,6 +23,9 @@ func NewInstanceHandler(svc *service.InstanceService) *InstanceHandler {
 
 // List 返回实例列表。
 func (h *InstanceHandler) List(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+
 	filter := repository.InstanceFilter{}
 	if userID := c.Query("user_id"); userID != "" {
 		if parsed, err := strconv.Atoi(userID); err == nil {
@@ -43,7 +46,15 @@ func (h *InstanceHandler) List(c *gin.Context) {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	common.Success(c, instances)
+
+	// 返回分页格式
+	total := len(instances)
+	common.Success(c, gin.H{
+		"items":     instances,
+		"total":     total,
+		"page":      page,
+		"page_size": pageSize,
+	})
 }
 
 // Create 创建实例。

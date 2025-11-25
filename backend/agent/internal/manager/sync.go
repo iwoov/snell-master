@@ -80,7 +80,7 @@ func (m *InstanceManager) deleteInstanceFiles(instance *Instance) {
 	if instance == nil {
 		return
 	}
-	for _, path := range []string{instance.ConfigFile, instance.PIDFile, instance.LogFile} {
+	for _, path := range []string{instance.ConfigFile, instance.LogFile} {
 		if path == "" {
 			continue
 		}

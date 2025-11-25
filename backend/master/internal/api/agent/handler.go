@@ -36,17 +36,24 @@ func (h *Handler) GetConfig(c *gin.Context) {
 	}
 	result := ConfigResponse{Instances: make([]InstanceConfig, 0, len(instances))}
 	for _, inst := range instances {
+		username := ""
+		username = inst.User.Username
 		result.Instances = append(result.Instances, InstanceConfig{
-			InstanceID: inst.ID,
-			UserID:     inst.UserID,
-			NodeID:     inst.NodeID,
-			Port:       inst.Port,
-			PSK:        inst.PSK,
-			Version:    inst.Version,
-			Obfs:       inst.Obfs,
+			ID:       inst.ID,
+			UserID:   inst.UserID,
+			Username: username,
+			Port:     inst.Port,
+			PSK:      inst.PSK,
+			Version:  inst.Version,
+			Obfs:     inst.Obfs,
 		})
 	}
-	c.JSON(http.StatusOK, result)
+	// 包装为标准响应格式
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    result,
+	})
 }
 
 // Heartbeat 上报心跳。

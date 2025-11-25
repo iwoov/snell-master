@@ -36,7 +36,7 @@ func NewServices(deps ServiceDeps) *Services {
 	adminSvc := NewAdminService(repos.Admin, deps.Logger, deps.Config.JWT.Secret, deps.Config.JWT.ExpireHours)
 	userSvc := NewUserService(repos.User, repos.Admin, deps.Logger, deps.Config.JWT.Secret, deps.Config.JWT.ExpireHours)
 	nodeSvc := NewNodeService(repos.Node, repos.Instance, deps.Logger)
-	instanceSvc := NewInstanceService(repos.Instance, repos.User, repos.Node, deps.Logger)
+	instanceSvc := NewInstanceService(repos.Instance, repos.User, repos.Node, repos.Admin, deps.Logger)
 	trafficSvc := NewTrafficService(repos.Traffic, repos.User, deps.Logger)
 	subscribeSvc := NewSubscribeService(repos.Subscribe, repos.Template, repos.User, repos.Node, repos.Instance, deps.Logger)
 	templateSvc := NewTemplateService(repos.Template, deps.Logger)

@@ -5,15 +5,15 @@ type ConfigResponse struct {
 	Instances []InstanceConfig `json:"instances"`
 }
 
-// InstanceConfig 单个实例配置。
+// InstanceConfig 返回节点实例的配置。
 type InstanceConfig struct {
-	InstanceID uint   `json:"instance_id"`
-	UserID     uint   `json:"user_id"`
-	NodeID     uint   `json:"node_id"`
-	Port       int    `json:"port"`
-	PSK        string `json:"psk"`
-	Version    int    `json:"version"`
-	Obfs       string `json:"obfs,omitempty"`
+	ID       uint   `json:"id"`
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username,omitempty"`
+	Port     int    `json:"port"`
+	PSK      string `json:"psk"`
+	Version  int    `json:"version"`
+	Obfs     string `json:"obfs,omitempty"`
 }
 
 // HeartbeatRequest 节点心跳上报。
